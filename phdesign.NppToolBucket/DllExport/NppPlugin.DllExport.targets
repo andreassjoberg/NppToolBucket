@@ -24,6 +24,6 @@
         SourceFiles="$(TargetPath)" 
         DestinationFolder="C:\Program Files (x86)\Notepad++\plugins\" 
         Condition="Exists('C:\Program Files (x86)\Notepad++\plugins\')"
-        ContinueOnError="false" />
+        ContinueOnError="true" />
   </Target>
 </Project>

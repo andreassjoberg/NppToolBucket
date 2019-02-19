@@ -14,95 +14,99 @@
  * limitations under the License.
  */
 
-using System;
-using System.Text;
 using phdesign.NppToolBucket.PluginCore;
-using phdesign.NppToolBucket.Utilities.Security;
+using System;
+using System.Globalization;
+using System.Linq;
+using System.Text;
 
 namespace phdesign.NppToolBucket
 {
     internal class Helpers
     {
-        private const string LoremIpsum =
-            "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-
-        internal static void ComputeSHA1Hash()
+        internal static void ExportWithHeadersToInsert()
         {
             var editor = Editor.GetActive();
             var text = editor.GetSelectedOrAllText();
             if (string.IsNullOrEmpty(text)) return;
 
-            var hash = SHA1.ComputeHash(text);
-            editor.SetSelectedText(hash);
-        }
+            var lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length < 2) return;
 
-        internal static void ComputeMD5Hash()
-        {
-            var editor = Editor.GetActive();
-            var text = editor.GetSelectedOrAllText();
-            if (string.IsNullOrEmpty(text)) return;
+            var header = lines.First();
+            var content = lines.Skip(1).ToList();
 
-            var hash = MD5.ComputeHash(text);
-            editor.SetSelectedText(hash);
-        }
+            var sb = new StringBuilder();
 
-        internal static void GenerateLoremIpsum()
-        {
-            Editor.GetActive().SetSelectedText(LoremIpsum);
-        }
-
-        internal static void Base64Encode()
-        {
-            var editor = Editor.GetActive();
-            var text = editor.GetSelectedOrAllText();
-            if (string.IsNullOrEmpty(text)) return;
-
-            var bytes = Encoding.UTF8.GetBytes(text);
-            var result = Convert.ToBase64String(bytes);
-            editor.SetSelectedText(result);
-        }
-
-        internal static void Base64Decode()
-        {
-            var editor = Editor.GetActive();
-            var text = editor.GetSelectedOrAllText();
-            if (string.IsNullOrEmpty(text)) return;
-
-            var bytes = Convert.FromBase64String(text);
-            var result = Encoding.UTF8.GetString(bytes);
-            editor.SetSelectedText(result);
-        }
-
-        internal static void ClearFindAllInAllDocuments()
-        {
-            int originalView;
-            Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTSCINTILLA, 0, out originalView);
-
-            // Do the other view first so we leave the user back on the original view they started
-            var otherView = originalView == (int)NppMsg.MAIN_VIEW ? (int)NppMsg.SUB_VIEW : (int)NppMsg.MAIN_VIEW;
-            ClearFindAllInView(otherView);
-            ClearFindAllInView(originalView);
-        }
-
-        private static void ClearFindAllInView(int view)
-        {
-            var originalDocument = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETCURRENTDOCINDEX, 0, view);
-            var docCount = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETNBOPENFILES, 0, view + 1);
-
-            for (int i = 0; i < docCount; i++)
+            var columns = header.Split('\t').Select(p => p.Trim()).ToList();
+            foreach (var line in content)
             {
-                Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_ACTIVATEDOC, view, i);
-                ClearFindAllInCurrentDocument();
-            }
-            // Restore original doc
-            Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_ACTIVATEDOC, view, originalDocument);
-        }
+                var l = line.Split('\t').ToList();
+                if (l.Count != columns.Count) return;
 
-        private static void ClearFindAllInCurrentDocument()
+                sb.AppendLine($"insert into [Table] ({string.Join(", ", columns.Select(p => $"[{p}]"))}) values ({string.Join(", ", l.Select(p => $"'{p}'"))})");
+            }
+
+            var result = sb.ToString();
+
+            editor.SetSelectedText(result);
+        }
+        internal static void CsvToJson()
         {
             var editor = Editor.GetActive();
-            editor.RemoveFindMarks();
-            editor.RemoveAllBookmarks();
+            var text = editor.GetSelectedOrAllText();
+            if (string.IsNullOrEmpty(text)) return;
+
+            var lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length <= 0) return;
+
+            const char separator = '\t';
+            var header = lines[0].Split(separator);
+            if (header.Length <= 0) return;
+
+            var columnTypes = new Type[header.Length];
+
+            var sb = new StringBuilder("[\r\n");
+            for (var i = 1; i < lines.Length; ++i)
+            {
+                if (string.IsNullOrWhiteSpace(lines[i])) continue;
+
+                var line = lines[i].Split(separator);
+                if (line.Length != header.Length) break;
+
+                var stringBuilder = new StringBuilder("\t{ ");
+                for (var column = 0; column < line.Length; ++column)
+                {
+                    if (string.IsNullOrWhiteSpace(line[column]) ||
+                        line[column].Equals("null", StringComparison.OrdinalIgnoreCase))
+                    {
+                        stringBuilder.Append($"\"{header[column].Trim()}\": null");
+                    }
+                    else if (decimal.TryParse(line[column], NumberStyles.Any, new NumberFormatInfo(), out _) &&
+                             columnTypes[column] != typeof(string))
+                    {
+                        stringBuilder.Append($"\"{header[column].Trim()}\": {line[column].Trim()}");
+                    }
+                    else
+                    {
+                        columnTypes[column] = typeof(string);
+                        stringBuilder.Append($"\"{header[column].Trim()}\": \"{line[column]}\"");
+                    }
+
+                    if (column + 1 < line.Length)
+                    {
+                        stringBuilder.Append(", ");
+                    }
+                }
+
+                stringBuilder.AppendLine($@" }}{(i + 1 < lines.Length ? "," : "")}");
+                sb.Append(stringBuilder);
+            }
+
+            sb.AppendLine("]");
+            var result = sb.ToString();
+
+            editor.SetSelectedText(result);
         }
     }
 }

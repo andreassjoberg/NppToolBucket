@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+using phdesign.NppToolBucket.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using phdesign.NppToolBucket.Utilities;
 
 namespace phdesign.NppToolBucket.PluginCore
 {
@@ -31,7 +31,7 @@ namespace phdesign.NppToolBucket.PluginCore
         #endregion
 
         #region Fields
-        
+
         private readonly IntPtr _activeScintilla;
 
         #endregion

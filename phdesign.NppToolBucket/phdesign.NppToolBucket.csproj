@@ -65,34 +65,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FindAndReplace.cs" />
-    <Compile Include="FindAndReplaceSettings.cs" />
-    <Compile Include="Forms\FindAndReplaceForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\FindAndReplaceForm.Designer.cs">
-      <DependentUpon>FindAndReplaceForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\GuidGeneratorForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\GuidGeneratorForm.Designer.cs">
-      <DependentUpon>GuidGeneratorForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="GuidGenerator.cs" />
-    <Compile Include="GuidGeneratorSettings.cs" />
-    <Compile Include="IndentationSettings.cs" />
     <Compile Include="DllExport\DllExportAttribute.cs" />
-    <Compile Include="Forms\IndentationSettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\IndentationSettingsForm.Designer.cs">
-      <DependentUpon>IndentationSettingsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Infrastructure\Settings.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Infrastructure\WindowWrapper.cs" />
     <Compile Include="Jayrock\BooleanObject.cs" />
     <Compile Include="Jayrock\Collections\KeyedCollection.cs" />
     <Compile Include="Jayrock\Configuration\DictionarySectionHandler.cs" />
@@ -214,34 +187,14 @@
     </Compile>
     <Compile Include="Utilities\AssemblyUtils.cs" />
     <Compile Include="Utilities\Enum\EnumUtils.cs" />
-    <Compile Include="Utilities\Security\MD5.cs" />
-    <Compile Include="Utilities\Security\SHA1.cs" />
     <Compile Include="Utilities\StringUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Forms\FindAndReplaceForm.resx">
-      <DependentUpon>FindAndReplaceForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\GuidGeneratorForm.resx">
-      <DependentUpon>GuidGeneratorForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\IndentationSettingsForm.resx">
-      <DependentUpon>IndentationSettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\changeindent.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\history.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\search.png" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildProjectDirectory)\DllExport\NppPlugin.DllExport.targets" />
